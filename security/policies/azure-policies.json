@@ -1,0 +1,269 @@
+{
+  "policies": [
+    {
+      "name": "deny-public-ip-on-aks",
+      "displayName": "Deny public IP addresses on AKS clusters",
+      "description": "Ensures AKS clusters are deployed as private clusters without public IP exposure.",
+      "mode": "Indexed",
+      "parameters": {},
+      "policyRule": {
+        "if": {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.ContainerService/managedClusters"
+            },
+            {
+              "field": "properties.apiServerAccessProfile.enablePrivateCluster",
+              "notEquals": true
+            }
+          ]
+        },
+        "then": {
+          "effect": "Deny"
+        }
+      }
+    },
+    {
+      "name": "deny-public-storage-accounts",
+      "displayName": "Deny public access on Storage Accounts",
+      "description": "Ensures all Storage Accounts have public blob access disabled.",
+      "mode": "Indexed",
+      "parameters": {},
+      "policyRule": {
+        "if": {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.Storage/storageAccounts"
+            },
+            {
+              "field": "properties.allowBlobPublicAccess",
+              "notEquals": false
+            }
+          ]
+        },
+        "then": {
+          "effect": "Deny"
+        }
+      }
+    },
+    {
+      "name": "require-https-storage-accounts",
+      "displayName": "Require HTTPS on Storage Accounts",
+      "description": "Ensures all Storage Accounts enforce HTTPS traffic only.",
+      "mode": "Indexed",
+      "parameters": {},
+      "policyRule": {
+        "if": {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.Storage/storageAccounts"
+            },
+            {
+              "field": "properties.supportsHttpsTrafficOnly",
+              "notEquals": true
+            }
+          ]
+        },
+        "then": {
+          "effect": "Deny"
+        }
+      }
+    },
+    {
+      "name": "require-minimum-tls-storage",
+      "displayName": "Require minimum TLS 1.2 on Storage Accounts",
+      "description": "Ensures all Storage Accounts enforce TLS 1.2 as the minimum version.",
+      "mode": "Indexed",
+      "parameters": {},
+      "policyRule": {
+        "if": {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.Storage/storageAccounts"
+            },
+            {
+              "field": "properties.minimumTlsVersion",
+              "notIn": ["TLS1_2", "TLS1_3"]
+            }
+          ]
+        },
+        "then": {
+          "effect": "Deny"
+        }
+      }
+    },
+    {
+      "name": "deny-key-vault-public-access",
+      "displayName": "Deny public network access on Key Vaults",
+      "description": "Ensures all Key Vaults disable public network access and use Private Endpoints.",
+      "mode": "Indexed",
+      "parameters": {},
+      "policyRule": {
+        "if": {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.KeyVault/vaults"
+            },
+            {
+              "field": "properties.publicNetworkAccess",
+              "notEquals": "Disabled"
+            }
+          ]
+        },
+        "then": {
+          "effect": "Deny"
+        }
+      }
+    },
+    {
+      "name": "require-key-vault-soft-delete",
+      "displayName": "Require soft delete on Key Vaults",
+      "description": "Ensures all Key Vaults have soft delete enabled to prevent accidental deletion.",
+      "mode": "Indexed",
+      "parameters": {},
+      "policyRule": {
+        "if": {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.KeyVault/vaults"
+            },
+            {
+              "field": "properties.enableSoftDelete",
+              "notEquals": true
+            }
+          ]
+        },
+        "then": {
+          "effect": "Deny"
+        }
+      }
+    },
+    {
+      "name": "require-resource-tags",
+      "displayName": "Require mandatory resource tags",
+      "description": "Ensures all resources have mandatory tags: Environment, ManagedBy, and Owner.",
+      "mode": "Indexed",
+      "parameters": {
+        "requiredTags": {
+          "type": "Array",
+          "metadata": {
+            "displayName": "Required tag names",
+            "description": "List of tag names that must be present on all resources"
+          },
+          "defaultValue": ["Environment", "ManagedBy", "Owner"]
+        }
+      },
+      "policyRule": {
+        "if": {
+          "anyOf": [
+            {
+              "field": "tags['Environment']",
+              "exists": false
+            },
+            {
+              "field": "tags['ManagedBy']",
+              "exists": false
+            },
+            {
+              "field": "tags['Owner']",
+              "exists": false
+            }
+          ]
+        },
+        "then": {
+          "effect": "Audit"
+        }
+      }
+    },
+    {
+      "name": "deny-privileged-containers-aks",
+      "displayName": "Deny privileged containers in AKS",
+      "description": "Ensures no containers run in privileged mode in AKS clusters.",
+      "mode": "Microsoft.Kubernetes.Data",
+      "parameters": {
+        "excludedNamespaces": {
+          "type": "Array",
+          "metadata": {
+            "displayName": "Namespace exclusions",
+            "description": "Namespaces excluded from this policy"
+          },
+          "defaultValue": ["kube-system", "gatekeeper-system", "azure-arc"]
+        }
+      },
+      "policyRule": {
+        "if": {
+          "field": "type",
+          "in": [
+            "Microsoft.ContainerService/managedClusters"
+          ]
+        },
+        "then": {
+          "effect": "Audit",
+          "details": {
+            "constraintTemplate": "https://store.policy.core.windows.net/kubernetes/container-no-privilege/v2/template.yaml",
+            "constraint": "https://store.policy.core.windows.net/kubernetes/container-no-privilege/v2/constraint.yaml",
+            "excludedNamespaces": "[parameters('excludedNamespaces')]"
+          }
+        }
+      }
+    },
+    {
+      "name": "require-defender-for-servers",
+      "displayName": "Require Microsoft Defender for Servers",
+      "description": "Ensures Microsoft Defender for Servers is enabled on all subscriptions.",
+      "mode": "All",
+      "parameters": {},
+      "policyRule": {
+        "if": {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.Resources/subscriptions"
+            }
+          ]
+        },
+        "then": {
+          "effect": "AuditIfNotExists",
+          "details": {
+            "type": "Microsoft.Security/pricings",
+            "name": "VirtualMachines",
+            "existenceCondition": {
+              "field": "Microsoft.Security/pricings/pricingTier",
+              "equals": "Standard"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "deny-sql-public-endpoint",
+      "displayName": "Deny public endpoint on Azure SQL",
+      "description": "Ensures Azure SQL servers do not allow public network access.",
+      "mode": "Indexed",
+      "parameters": {},
+      "policyRule": {
+        "if": {
+          "allOf": [
+            {
+              "field": "type",
+              "equals": "Microsoft.Sql/servers"
+            },
+            {
+              "field": "properties.publicNetworkAccess",
+              "notEquals": "Disabled"
+            }
+          ]
+        },
+        "then": {
+          "effect": "Deny"
+        }
+      }
+    }
+  ]
+}
