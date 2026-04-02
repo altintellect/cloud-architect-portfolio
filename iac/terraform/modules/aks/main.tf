@@ -70,8 +70,8 @@ resource "azurerm_kubernetes_cluster" "main" {
   private_dns_zone_id                 = var.private_dns_zone_id
 
   # Automatic upgrades
-  automatic_channel_upgrade           = "patch"
-  node_os_channel_upgrade             = "NodeImage"
+  automatic_channel_upgrade = "patch"
+  node_os_channel_upgrade   = "NodeImage"
   maintenance_window_auto_upgrade {
     frequency   = "Weekly"
     interval    = 1
@@ -104,8 +104,8 @@ resource "azurerm_kubernetes_cluster" "main" {
   }
 
   # Workload Identity
-  workload_identity_enabled         = true
-  oidc_issuer_enabled               = true
+  workload_identity_enabled = true
+  oidc_issuer_enabled       = true
 
   # Azure AD Integration
   azure_active_directory_role_based_access_control {
