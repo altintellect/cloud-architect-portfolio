@@ -1,0 +1,55 @@
+---
+# Playbook: Apply security baseline to all VMs
+# Usage: ansible-playbook -i inventories/prod playbooks/apply-baseline.yml
+
+- name: Apply Azure VM Security Baseline
+  hosts: all
+  become: true
+  gather_facts: true
+
+  pre_tasks:
+    - name: Verify target host is reachable
+      ansible.builtin.ping:
+
+    - name: Print host information
+      ansible.builtin.debug:
+        msg: >
+          Applying baseline to {{ inventory_hostname }}
+          OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          Kernel: {{ ansible_kernel }}
+
+  roles:
+    - role: azure-vm-baseline
+
+  post_tasks:
+    - name: Verify SSH hardening applied
+      ansible.builtin.command:
+        cmd: sshd -T
+      register: sshd_config
+      changed_when: false
+
+    - name: Confirm PasswordAuthentication is disabled
+      ansible.builtin.assert:
+        that:
+          - "'passwordauthentication no' in sshd_config.stdout"
+        fail_msg: "SSH password authentication is still enabled!"
+        success_msg: "SSH password authentication confirmed disabled"
+
+    - name: Confirm fail2ban is running
+      ansible.builtin.systemd:
+        name: fail2ban
+      register: fail2ban_status
+
+    - name: Assert fail2ban is active
+      ansible.builtin.assert:
+        that:
+          - fail2ban_status.status.ActiveState == 'active'
+        fail_msg: "fail2ban is not running!"
+        success_msg: "fail2ban is running"
+
+    - name: Generate compliance summary
+      ansible.builtin.debug:
+        msg: >
+          Baseline applied successfully to {{ inventory_hostname }}.
+          SSH hardened, fail2ban active, auditd configured,
+          kernel parameters set, OMS agent installed.

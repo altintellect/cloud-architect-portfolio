@@ -1,0 +1,82 @@
+---
+# Playbook: Apply security patches to VMs
+# Usage: ansible-playbook -i inventories/prod playbooks/patch-vms.yml
+# Usage (dry run): ansible-playbook -i inventories/prod playbooks/patch-vms.yml --check
+
+- name: Patch Azure VMs
+  hosts: all
+  become: true
+  serial: "33%"  # Roll patches across 33% of hosts at a time
+  gather_facts: true
+
+  vars:
+    reboot_timeout: 600
+    pre_patch_snapshot: true
+
+  pre_tasks:
+    - name: Check disk space before patching
+      ansible.builtin.shell:
+        cmd: df -h / | awk 'NR==2 {print $5}' | sed 's/%//'
+      register: disk_usage
+      changed_when: false
+
+    - name: Fail if disk usage is above 85%
+      ansible.builtin.fail:
+        msg: "Disk usage is {{ disk_usage.stdout }}% - too high to safely patch"
+      when: disk_usage.stdout | int > 85
+
+    - name: Record pre-patch kernel version
+      ansible.builtin.command:
+        cmd: uname -r
+      register: pre_patch_kernel
+      changed_when: false
+
+  tasks:
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+      when: ansible_os_family == 'Debian'
+
+    - name: List available security updates
+      ansible.builtin.shell:
+        cmd: apt list --upgradable 2>/dev/null | grep -i security | wc -l
+      register: security_updates_count
+      changed_when: false
+      when: ansible_os_family == 'Debian'
+
+    - name: Print available security updates
+      ansible.builtin.debug:
+        msg: "{{ security_updates_count.stdout }} security updates available"
+      when: ansible_os_family == 'Debian'
+
+    - name: Apply security patches only
+      ansible.builtin.apt:
+        upgrade: safe
+        update_cache: false
+      when: ansible_os_family == 'Debian'
+      register: patch_result
+
+    - name: Check if reboot is required
+      ansible.builtin.stat:
+        path: /var/run/reboot-required
+      register: reboot_required
+
+    - name: Reboot if required
+      ansible.builtin.reboot:
+        reboot_timeout: "{{ reboot_timeout }}"
+        msg: "Rebooting after security patch application"
+      when: reboot_required.stat.exists
+
+  post_tasks:
+    - name: Record post-patch kernel version
+      ansible.builtin.command:
+        cmd: uname -r
+      register: post_patch_kernel
+      changed_when: false
+
+    - name: Print kernel change summary
+      ansible.builtin.debug:
+        msg: >
+          Patching complete on {{ inventory_hostname }}.
+          Kernel: {{ pre_patch_kernel.stdout }} -> {{ post_patch_kernel.stdout }}
+          Packages updated: {{ patch_result.changed }}

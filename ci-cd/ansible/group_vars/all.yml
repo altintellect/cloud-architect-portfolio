@@ -1,0 +1,29 @@
+---
+# Common variables for all hosts
+
+# NTP servers
+ntp_servers:
+  - 168.63.129.16
+  - time.windows.com
+
+# DNS servers
+dns_servers:
+  - 168.63.129.16
+
+# Log Analytics workspace
+log_analytics_workspace_id: "{{ vault_log_analytics_workspace_id }}"
+log_analytics_workspace_key: "{{ vault_log_analytics_workspace_key }}"
+
+# Security settings
+ssh_port: 22
+ssh_permit_root_login: "no"
+ssh_password_authentication: "no"
+ssh_max_auth_tries: 3
+
+# Patch settings
+auto_update_enabled: true
+auto_update_reboot_time: "02:00"
+
+# Monitoring
+install_oms_agent: true
+install_dependency_agent: true

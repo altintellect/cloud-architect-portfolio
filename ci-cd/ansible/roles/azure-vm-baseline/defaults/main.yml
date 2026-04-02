@@ -1,0 +1,19 @@
+---
+# Default variables for azure-vm-baseline role
+
+ssh_port: 22
+ssh_permit_root_login: "no"
+ssh_password_authentication: "no"
+ssh_max_auth_tries: 3
+
+install_oms_agent: true
+install_dependency_agent: false
+
+auto_update_enabled: true
+
+fail2ban_max_retry: 5
+fail2ban_ban_time: 600
+fail2ban_find_time: 600
+
+ntp_servers:
+  - 168.63.129.16

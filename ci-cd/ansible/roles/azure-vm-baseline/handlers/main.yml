@@ -1,0 +1,32 @@
+---
+
+- name: restart sshd
+  ansible.builtin.systemd:
+    name: sshd
+    state: restarted
+
+- name: restart ntp
+  ansible.builtin.systemd:
+    name: ntp
+    state: restarted
+
+- name: restart fail2ban
+  ansible.builtin.systemd:
+    name: fail2ban
+    state: restarted
+
+- name: restart auditd
+  ansible.builtin.systemd:
+    name: auditd
+    state: restarted
+
+- name: check reboot required
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: reboot_required
+  notify: reboot if required
+
+- name: reboot if required
+  ansible.builtin.reboot:
+    reboot_timeout: 300
+  when: reboot_required.stat.exists

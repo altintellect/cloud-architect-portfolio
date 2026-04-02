@@ -1,0 +1,134 @@
+---
+# Azure VM Security Baseline Tasks
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  when: ansible_os_family == 'Debian'
+
+- name: Install required packages
+  ansible.builtin.package:
+    name:
+      - curl
+      - wget
+      - unzip
+      - jq
+      - fail2ban
+      - auditd
+      - aide
+      - ntp
+    state: present
+
+- name: Configure NTP servers
+  ansible.builtin.template:
+    src: ntp.conf.j2
+    dest: /etc/ntp.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart ntp
+
+- name: Harden SSH configuration
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+    validate: sshd -t -f %s
+  loop:
+    - { regexp: '^PermitRootLogin', line: 'PermitRootLogin no' }
+    - { regexp: '^PasswordAuthentication', line: 'PasswordAuthentication no' }
+    - { regexp: '^MaxAuthTries', line: 'MaxAuthTries {{ ssh_max_auth_tries }}' }
+    - { regexp: '^X11Forwarding', line: 'X11Forwarding no' }
+    - { regexp: '^AllowTcpForwarding', line: 'AllowTcpForwarding no' }
+    - { regexp: '^ClientAliveInterval', line: 'ClientAliveInterval 300' }
+    - { regexp: '^ClientAliveCountMax', line: 'ClientAliveCountMax 2' }
+    - { regexp: '^Protocol', line: 'Protocol 2' }
+  notify: restart sshd
+
+- name: Configure fail2ban
+  ansible.builtin.template:
+    src: fail2ban-jail.conf.j2
+    dest: /etc/fail2ban/jail.local
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart fail2ban
+
+- name: Enable and start fail2ban
+  ansible.builtin.systemd:
+    name: fail2ban
+    state: started
+    enabled: true
+
+- name: Configure auditd rules
+  ansible.builtin.copy:
+    dest: /etc/audit/rules.d/azure-baseline.rules
+    content: |
+      # Monitor authentication events
+      -w /etc/passwd -p wa -k identity
+      -w /etc/group -p wa -k identity
+      -w /etc/shadow -p wa -k identity
+      -w /etc/sudoers -p wa -k sudoers
+      # Monitor SSH
+      -w /etc/ssh/sshd_config -p wa -k sshd
+      # Monitor privileged commands
+      -a always,exit -F arch=b64 -S execve -F euid=0 -k root_commands
+      # Monitor network configuration
+      -w /etc/hosts -p wa -k network
+      -w /etc/network -p wa -k network
+    owner: root
+    group: root
+    mode: '0640'
+  notify: restart auditd
+
+- name: Install Azure Monitor Agent
+  when: install_oms_agent | bool
+  block:
+    - name: Download OMS agent installer
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/Microsoft/OMS-Agent-for-Linux/master/installer/scripts/onboard_agent.sh
+        dest: /tmp/onboard_agent.sh
+        mode: '0755'
+
+    - name: Install OMS agent
+      ansible.builtin.command:
+        cmd: /tmp/onboard_agent.sh -w {{ log_analytics_workspace_id }} -s {{ log_analytics_workspace_key }}
+        creates: /opt/microsoft/omsagent
+
+- name: Disable unused services
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+  loop:
+    - bluetooth
+    - cups
+    - avahi-daemon
+  ignore_errors: true
+
+- name: Set kernel security parameters
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: true
+  loop:
+    - { name: 'net.ipv4.ip_forward', value: '0' }
+    - { name: 'net.ipv4.conf.all.send_redirects', value: '0' }
+    - { name: 'net.ipv4.conf.default.send_redirects', value: '0' }
+    - { name: 'net.ipv4.conf.all.accept_redirects', value: '0' }
+    - { name: 'net.ipv4.conf.all.log_martians', value: '1' }
+    - { name: 'net.ipv4.tcp_syncookies', value: '1' }
+    - { name: 'kernel.randomize_va_space', value: '2' }
+    - { name: 'fs.suid_dumpable', value: '0' }
+
+- name: Apply security patches
+  ansible.builtin.apt:
+    upgrade: safe
+    update_cache: true
+  when:
+    - ansible_os_family == 'Debian'
+    - auto_update_enabled | bool
+  notify: check reboot required

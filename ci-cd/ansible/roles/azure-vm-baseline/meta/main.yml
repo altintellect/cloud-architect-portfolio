@@ -1,0 +1,18 @@
+---
+galaxy_info:
+  author: Cloud Architecture Team
+  description: Azure VM security baseline hardening role
+  license: MIT
+  min_ansible_version: '2.14'
+  platforms:
+    - name: Ubuntu
+      versions:
+        - '22.04'
+        - '24.04'
+  galaxy_tags:
+    - azure
+    - security
+    - baseline
+    - hardening
+
+dependencies: []

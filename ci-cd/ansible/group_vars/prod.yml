@@ -1,0 +1,16 @@
+---
+# Production-specific variables
+
+environment: prod
+auto_update_enabled: false  # Controlled patch windows in prod
+patch_window: "Sunday 02:00-06:00 UTC"
+
+# Stricter security in prod
+ssh_max_auth_tries: 2
+fail2ban_max_retry: 3
+fail2ban_ban_time: 3600
+
+# Monitoring thresholds
+cpu_alert_threshold: 80
+memory_alert_threshold: 85
+disk_alert_threshold: 80

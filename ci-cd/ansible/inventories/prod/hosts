@@ -1,0 +1,22 @@
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3
+ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+
+[jump_hosts]
+bastion-prod ansible_host=10.0.2.4 ansible_user=azureuser
+
+[app_servers]
+app-prod-001 ansible_host=10.1.0.10 ansible_user=azureuser
+app-prod-002 ansible_host=10.1.0.11 ansible_user=azureuser
+app-prod-003 ansible_host=10.1.0.12 ansible_user=azureuser
+
+[data_servers]
+data-prod-001 ansible_host=10.1.10.10 ansible_user=azureuser
+
+[mgmt_servers]
+mgmt-prod-001 ansible_host=10.1.20.10 ansible_user=azureuser
+
+[prod:children]
+app_servers
+data_servers
+mgmt_servers
