@@ -1,0 +1,78 @@
+# ============================================
+# GITHUB ACTIONS WORKFLOW
+# This file watches your repo and automatically
+# deploys your Terraform code to Azure when
+# you push changes to the main branch
+# ============================================
+
+name: AzLearn Test Deploy
+
+# ============================================
+# TRIGGER
+# This workflow runs when you push any changes
+# inside the iac/azlearn-test/ folder to main
+# ============================================
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'iac/azlearn-test/**'
+  workflow_dispatch:  # allows manual trigger from GitHub
+
+# ============================================
+# JOBS
+# A job is a set of steps that run in sequence
+# ============================================
+jobs:
+  terraform-deploy:
+    name: Terraform Deploy to Azure
+    runs-on: ubuntu-latest  # GitHub provides this free Linux machine
+
+    # ============================================
+    # ENVIRONMENT VARIABLES
+    # These are available to all steps below
+    # Values come from your GitHub Secrets
+    # ============================================
+    env:
+      ARM_CLIENT_ID:       ${{ secrets.AZURE_CREDENTIALS && fromJson(secrets.AZURE_CREDENTIALS).clientId }}
+      ARM_CLIENT_SECRET:   ${{ secrets.AZURE_CREDENTIALS && fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID:       ${{ secrets.AZURE_CREDENTIALS && fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+
+    steps:
+
+      # Step 1 - Download your repo code onto the GitHub machine
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2 - Install Terraform on the GitHub machine
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.0
+
+      # Step 3 - Download Azure provider plugin
+      - name: Terraform Init
+        working-directory: iac/azlearn-test
+        run: terraform init
+
+      # Step 4 - Check code formatting
+      - name: Terraform Format Check
+        working-directory: iac/azlearn-test
+        run: terraform fmt -check
+
+      # Step 5 - Validate the code is correct
+      - name: Terraform Validate
+        working-directory: iac/azlearn-test
+        run: terraform validate
+
+      # Step 6 - Preview what will be created
+      - name: Terraform Plan
+        working-directory: iac/azlearn-test
+        run: terraform plan -var="resource_group_name=rg-azlearn-test" -var="location=canadacentral" -var="environment=test" -var="storage_account_name=stazlearn001ca"
+
+      # Step 7 - Actually deploy to Azure
+      - name: Terraform Apply
+        working-directory: iac/azlearn-test
+        run: terraform apply -auto-approve -var="resource_group_name=rg-azlearn-test" -var="location=canadacentral" -var="environment=test" -var="storage_account_name=stazlearn001ca"
