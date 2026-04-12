@@ -6,6 +6,16 @@
 terraform {
   required_version = ">= 1.0"
 
+  # Store Terraform state in Azure Storage
+  # So both local machine and GitHub Actions
+  # read and write from the same state file
+  backend "azurerm" {
+    resource_group_name  = "rg-azlearn-test"
+    storage_account_name = "stazlearn001ca"
+    container_name       = "tfstate"
+    key                  = "azlearn-test.terraform.tfstate"
+  }
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
