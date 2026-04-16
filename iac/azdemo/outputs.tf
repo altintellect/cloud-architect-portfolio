@@ -1,0 +1,43 @@
+# ============================================
+# OUTPUTS
+# ============================================
+
+output "resource_group_name" {
+  description = "Name of the created Resource Group"
+  value       = azurerm_resource_group.azdemo.name
+}
+
+output "resource_group_location" {
+  description = "Location of the Resource Group"
+  value       = azurerm_resource_group.azdemo.location
+}
+
+output "virtual_network_name" {
+  description = "Name of the Virtual Network"
+  value       = azurerm_virtual_network.azdemo.name
+}
+
+output "subnet_name" {
+  description = "Name of the Subnet"
+  value       = azurerm_subnet.azdemo.name
+}
+
+output "storage_account_name" {
+  description = "Name of the Storage Account"
+  value       = azurerm_storage_account.azdemo.name
+}
+
+output "public_ip_address" {
+  description = "Public IP address of the Virtual Machine"
+  value       = azurerm_public_ip.azdemo.ip_address
+}
+
+output "vm_name" {
+  description = "Name of the Virtual Machine"
+  value       = azurerm_linux_virtual_machine.azdemo.name
+}
+
+output "vm_admin_username" {
+  description = "Admin username for the Virtual Machine"
+  value       = azurerm_linux_virtual_machine.azdemo.admin_username
+}
