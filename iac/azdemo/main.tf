@@ -132,7 +132,7 @@ resource "azurerm_linux_virtual_machine" "azdemo" {
   name                = "vm-azdemo-001"
   resource_group_name = azurerm_resource_group.azdemo.name
   location            = azurerm_resource_group.azdemo.location
-  size                = "Standard_B1s"
+  size                = "Standard_B2als_v2"
   admin_username      = var.vm_admin_username
   admin_password      = var.vm_admin_password
 
