@@ -1,43 +1,22 @@
 # Senior Cloud Architect Portfolio
 
-> Designing resilient, scalable, and secure cloud-native architectures across AWS, Azure, and GCP.
+> Designing resilient, scalable, and secure cloud-native architectures 
+> on Microsoft Azure with fully automated Infrastructure as Code pipelines.
+
+## CI/CD Pipeline Status
+
+![Infrastructure Validation](https://github.com/altintellect/cloud-architect-portfolio/actions/workflows/infrastructure-validation.yml/badge.svg)
+![AzDemo Deploy](https://github.com/altintellect/cloud-architect-portfolio/actions/workflows/azdemo-deploy.yml/badge.svg)
+
+---
 
 ## About
 
-This repository is a living portfolio of cloud architecture patterns, IaC templates, runbooks, and best practices.
+This repository is a living portfolio of cloud architecture patterns, 
+IaC templates, CI/CD pipelines, runbooks, and best practices. Every 
+Azure resource shown here was deployed automatically through code — 
+nothing built by clicking in the portal.
 
-## Structure
+---
 
-- architectures/ - ADRs and diagrams
-- iac/terraform/ - Terraform modules
-- iac/pulumi/    - Pulumi stacks
-- iac/bicep/     - Azure Bicep templates
-- kubernetes/    - Helm charts and manifests
-- security/      - Security baselines
-- monitoring/    - Prometheus and Grafana configs
-- runbooks/      - Incident response runbooks
-- docs/          - Technical documentation
-
-## Core Competencies
-
-| Domain | Technologies |
-|---|---|
-| Cloud Platforms | AWS, Azure, GCP |
-| IaC | Terraform, Pulumi, Bicep |
-| Containers | Kubernetes, Docker, Helm |
-| CI/CD | GitHub Actions, ArgoCD |
-| Security | Zero Trust, IAM, CSPM |
-| Observability | Prometheus, Grafana, OpenTelemetry |
-
-## Architecture Principles
-
-1. Design for failure
-2. Least privilege
-3. Infrastructure as Code
-4. Shift-left security
-5. Cost awareness
-6. Observability first
-
-## License
-
-MIT License
+## Architecture Overview
