@@ -65,6 +65,41 @@ resource "azurerm_subnet" "azdemo" {
   virtual_network_name = azurerm_virtual_network.azdemo.name
   address_prefixes     = ["10.1.1.0/24"]
 }
+# ============================================
+# NETWORK SECURITY GROUP
+# Firewall rules for the VM
+# ============================================
+resource "azurerm_network_security_group" "azdemo" {
+  name                = "nsg-azdemo-001"
+  location            = azurerm_resource_group.azdemo.location
+  resource_group_name = azurerm_resource_group.azdemo.name
+
+  security_rule {
+    name                       = "allow-ssh"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  tags = {
+    environment = var.environment
+    managed_by  = "terraform"
+  }
+}
+
+# ============================================
+# ASSOCIATE NSG WITH SUBNET
+# Applies the firewall rules to the subnet
+# ============================================
+resource "azurerm_subnet_network_security_group_association" "azdemo" {
+  subnet_id                 = azurerm_subnet.azdemo.id
+  network_security_group_id = azurerm_network_security_group.azdemo.id
+}
 
 # ============================================
 # STORAGE ACCOUNT
