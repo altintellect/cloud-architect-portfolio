@@ -92,6 +92,7 @@ resource "azurerm_public_ip" "azdemo" {
   location            = azurerm_resource_group.azdemo.location
   resource_group_name = azurerm_resource_group.azdemo.name
   allocation_method   = "Static"
+  sku                 = "Standard"
 
   tags = {
     environment = var.environment
