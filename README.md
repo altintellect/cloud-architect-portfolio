@@ -3,7 +3,6 @@
 > Designing resilient, scalable, and secure cloud-native architectures 
 > on Microsoft Azure with fully automated Infrastructure as Code pipelines.
 
-## CI/CD Pipeline Status
 
 ## CI/CD Pipeline Status
 
