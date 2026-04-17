@@ -31,4 +31,4 @@ to run Terraform automatically. Terraform reads and writes state to Azure
 Blob Storage and deploys all resources to Azure. No manual steps required
 after the initial push.
 
-<img width="375" height="908" alt="diagram(3)" src="https://github.com/user-attachments/assets/cc9aec7f-644d-4b1a-b104-eb6ffa6d112e" />
+<img width="125" height="302" alt="diagram(3)" src="https://github.com/user-attachments/assets/cc9aec7f-644d-4b1a-b104-eb6ffa6d112e" />
