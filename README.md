@@ -20,3 +20,11 @@ nothing built by clicking in the portal.
 ---
 
 ## Architecture Overview
+
+The pipeline connects four layers — local development in VS Code,
+source control on GitHub, automated deployment via GitHub Actions,
+and live infrastructure on Microsoft Azure.
+Code is written locally, pushed to GitHub, which triggers GitHub Actions
+to run Terraform automatically. Terraform reads and writes state to Azure
+Blob Storage and deploys all resources to Azure. No manual steps required
+after the initial push.
