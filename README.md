@@ -3,7 +3,6 @@
 > Designing resilient, scalable, and secure cloud-native architectures 
 > on Microsoft Azure with fully automated Infrastructure as Code pipelines.
 
-## CI/CD Pipeline Status
 
 ![Infrastructure CI](https://github.com/altintellect/cloud-architect-portfolio/actions/workflows/infrastructure-ci.yml/badge.svg)
 ![AzDemo Deploy](https://github.com/altintellect/cloud-architect-portfolio/actions/workflows/azdemo-deploy.yml/badge.svg)
@@ -29,6 +28,7 @@ to run Terraform automatically. Terraform reads and writes state to Azure
 Blob Storage and deploys all resources to Azure. No manual steps required
 after the initial push.
 
+<<<<<<< HEAD
 <img width="375" height="908" alt="diagram(3)" src="https://github.com/user-attachments/assets/cc9aec7f-644d-4b1a-b104-eb6ffa6d112e" />
 
 
@@ -113,3 +113,6 @@ A fully automated Azure environment deployed through Terraform and GitHub Action
 ## License
 
 MIT License
+=======
+<img width="190" height="453" alt="diagram(3)" src="https://github.com/user-attachments/assets/cc9aec7f-644d-4b1a-b104-eb6ffa6d112e" />
+>>>>>>> 38ce986f28f315434910c0b7baee6f9a22838ce4
