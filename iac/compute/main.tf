@@ -5,10 +5,10 @@ terraform {
   required_version = ">= 1.0"
 
   backend "azurerm" {
-    resource_group_name  = "rg-azlearn-test"
-    storage_account_name = "stazlearn001ca"
+    resource_group_name  = "rg-altint-foundation"
+    storage_account_name = "staltintfnd001ca"
     container_name       = "tfstate"
-    key                  = "azdemo.terraform.tfstate"
+    key                  = "compute.terraform.tfstate"
   }
 
   required_providers {
@@ -29,14 +29,14 @@ provider "azurerm" {
 # ============================================
 # RESOURCE GROUP
 # ============================================
-resource "azurerm_resource_group" "azdemo" {
+resource "azurerm_resource_group" "compute" {
   name     = var.resource_group_name
   location = var.location
 
   tags = {
     environment = var.environment
-    project     = "azdemo"
-    owner       = "acadianeng"
+    project     = "altintellect"
+    owner       = "altintellect"
     managed_by  = "terraform"
   }
 }
@@ -44,11 +44,11 @@ resource "azurerm_resource_group" "azdemo" {
 # ============================================
 # VIRTUAL NETWORK
 # ============================================
-resource "azurerm_virtual_network" "azdemo" {
-  name                = "vnet-azdemo-001"
+resource "azurerm_virtual_network" "compute" {
+  name                = "vnet-altint-compute-001"
   address_space       = ["10.1.0.0/16"]
-  location            = azurerm_resource_group.azdemo.location
-  resource_group_name = azurerm_resource_group.azdemo.name
+  location            = azurerm_resource_group.compute.location
+  resource_group_name = azurerm_resource_group.compute.name
 
   tags = {
     environment = var.environment
@@ -59,55 +59,20 @@ resource "azurerm_virtual_network" "azdemo" {
 # ============================================
 # SUBNET
 # ============================================
-resource "azurerm_subnet" "azdemo" {
-  name                 = "snet-azdemo-001"
-  resource_group_name  = azurerm_resource_group.azdemo.name
-  virtual_network_name = azurerm_virtual_network.azdemo.name
+resource "azurerm_subnet" "compute" {
+  name                 = "snet-altint-compute-001"
+  resource_group_name  = azurerm_resource_group.compute.name
+  virtual_network_name = azurerm_virtual_network.compute.name
   address_prefixes     = ["10.1.1.0/24"]
-}
-# ============================================
-# NETWORK SECURITY GROUP
-# Firewall rules for the VM
-# ============================================
-resource "azurerm_network_security_group" "azdemo" {
-  name                = "nsg-azdemo-001"
-  location            = azurerm_resource_group.azdemo.location
-  resource_group_name = azurerm_resource_group.azdemo.name
-
-  security_rule {
-    name                       = "allow-ssh"
-    priority                   = 100
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "Tcp"
-    source_port_range          = "*"
-    destination_port_range     = "22"
-    source_address_prefix      = "99.228.241.129/32"
-    destination_address_prefix = "*"
-  }
-
-  tags = {
-    environment = var.environment
-    managed_by  = "terraform"
-  }
-}
-
-# ============================================
-# ASSOCIATE NSG WITH SUBNET
-# Applies the firewall rules to the subnet
-# ============================================
-resource "azurerm_subnet_network_security_group_association" "azdemo" {
-  subnet_id                 = azurerm_subnet.azdemo.id
-  network_security_group_id = azurerm_network_security_group.azdemo.id
 }
 
 # ============================================
 # STORAGE ACCOUNT
 # ============================================
-resource "azurerm_storage_account" "azdemo" {
+resource "azurerm_storage_account" "compute" {
   name                     = var.storage_account_name
-  resource_group_name      = azurerm_resource_group.azdemo.name
-  location                 = azurerm_resource_group.azdemo.location
+  resource_group_name      = azurerm_resource_group.compute.name
+  location                 = azurerm_resource_group.compute.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
 
@@ -118,14 +83,46 @@ resource "azurerm_storage_account" "azdemo" {
 }
 
 # ============================================
-# PUBLIC IP
-# Gives the VM a public address so you
-# can connect to it from your computer
+# NETWORK SECURITY GROUP
 # ============================================
-resource "azurerm_public_ip" "azdemo" {
-  name                = "pip-azdemo-001"
-  location            = azurerm_resource_group.azdemo.location
-  resource_group_name = azurerm_resource_group.azdemo.name
+resource "azurerm_network_security_group" "compute" {
+  name                = "nsg-altint-compute-001"
+  location            = azurerm_resource_group.compute.location
+  resource_group_name = azurerm_resource_group.compute.name
+
+  security_rule {
+    name                       = "allow-ssh"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "22"
+    source_address_prefix      = var.allowed_ssh_ip
+    destination_address_prefix = "*"
+  }
+
+  tags = {
+    environment = var.environment
+    managed_by  = "terraform"
+  }
+}
+
+# ============================================
+# NSG ASSOCIATION
+# ============================================
+resource "azurerm_subnet_network_security_group_association" "compute" {
+  subnet_id                 = azurerm_subnet.compute.id
+  network_security_group_id = azurerm_network_security_group.compute.id
+}
+
+# ============================================
+# PUBLIC IP
+# ============================================
+resource "azurerm_public_ip" "compute" {
+  name                = "pip-altint-compute-001"
+  location            = azurerm_resource_group.compute.location
+  resource_group_name = azurerm_resource_group.compute.name
   allocation_method   = "Static"
   sku                 = "Standard"
 
@@ -137,19 +134,17 @@ resource "azurerm_public_ip" "azdemo" {
 
 # ============================================
 # NETWORK INTERFACE
-# Connects the VM to the subnet and public IP
-# Like a network card in a physical computer
 # ============================================
-resource "azurerm_network_interface" "azdemo" {
-  name                = "nic-azdemo-001"
-  location            = azurerm_resource_group.azdemo.location
-  resource_group_name = azurerm_resource_group.azdemo.name
+resource "azurerm_network_interface" "compute" {
+  name                = "nic-altint-compute-001"
+  location            = azurerm_resource_group.compute.location
+  resource_group_name = azurerm_resource_group.compute.name
 
   ip_configuration {
     name                          = "internal"
-    subnet_id                     = azurerm_subnet.azdemo.id
+    subnet_id                     = azurerm_subnet.compute.id
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.azdemo.id
+    public_ip_address_id          = azurerm_public_ip.compute.id
   }
 
   tags = {
@@ -160,13 +155,12 @@ resource "azurerm_network_interface" "azdemo" {
 
 # ============================================
 # VIRTUAL MACHINE
-# Ubuntu 22.04 LTS - smallest size B1s
-# 1 vCPU, 1GB RAM - perfect for learning
+# Ubuntu 22.04 LTS - Standard_B2als_v2
 # ============================================
-resource "azurerm_linux_virtual_machine" "azdemo" {
-  name                = "vm-azdemo-001"
-  resource_group_name = azurerm_resource_group.azdemo.name
-  location            = azurerm_resource_group.azdemo.location
+resource "azurerm_linux_virtual_machine" "compute" {
+  name                = "vm-altint-001"
+  resource_group_name = azurerm_resource_group.compute.name
+  location            = azurerm_resource_group.compute.location
   size                = "Standard_B2als_v2"
   admin_username      = var.vm_admin_username
   admin_password      = var.vm_admin_password
@@ -174,7 +168,7 @@ resource "azurerm_linux_virtual_machine" "azdemo" {
   disable_password_authentication = false
 
   network_interface_ids = [
-    azurerm_network_interface.azdemo.id
+    azurerm_network_interface.compute.id
   ]
 
   os_disk {

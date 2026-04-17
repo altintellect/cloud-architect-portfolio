@@ -1,0 +1,72 @@
+# ============================================
+# GITHUB ACTIONS WORKFLOW
+# Deploys altintellect compute infrastructure
+# including Virtual Machine and networking
+# ============================================
+
+name: Compute Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'iac/compute/**'
+  workflow_dispatch:
+
+jobs:
+  terraform-deploy:
+    name: Terraform Deploy Compute
+    runs-on: ubuntu-latest
+
+    env:
+      ARM_CLIENT_ID:       ${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}
+      ARM_CLIENT_SECRET:   ${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID:       ${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.7.0
+
+      - name: Terraform Init
+        working-directory: iac/compute
+        run: terraform init
+
+      - name: Terraform Format Check
+        working-directory: iac/compute
+        run: terraform fmt -check
+
+      - name: Terraform Validate
+        working-directory: iac/compute
+        run: terraform validate
+
+      - name: Terraform Plan
+        working-directory: iac/compute
+        run: |
+          terraform plan \
+            -var="resource_group_name=rg-altint-compute" \
+            -var="location=canadacentral" \
+            -var="environment=production" \
+            -var="storage_account_name=staltintcmp001ca" \
+            -var="vm_admin_username=${{ secrets.VM_ADMIN_USERNAME }}" \
+            -var="vm_admin_password=${{ secrets.VM_ADMIN_PASSWORD }}" \
+            -var="allowed_ssh_ip=99.228.241.129/32"
+
+      - name: Terraform Apply
+        working-directory: iac/compute
+        run: |
+          terraform apply -auto-approve \
+            -var="resource_group_name=rg-altint-compute" \
+            -var="location=canadacentral" \
+            -var="environment=production" \
+            -var="storage_account_name=staltintcmp001ca" \
+            -var="vm_admin_username=${{ secrets.VM_ADMIN_USERNAME }}" \
+            -var="vm_admin_password=${{ secrets.VM_ADMIN_PASSWORD }}" \
+            -var="allowed_ssh_ip=99.228.241.129/32"

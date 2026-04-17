@@ -1,22 +1,21 @@
 # ============================================
 # GITHUB ACTIONS WORKFLOW
-# Deploys azdemo infrastructure to Azure
-# including a Virtual Machine
+# Deploys altintellect foundation infrastructure
 # ============================================
 
-name: AzDemo Deploy
+name: Foundation Deploy
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'iac/azdemo/**'
+      - 'iac/foundation/**'
   workflow_dispatch:
 
 jobs:
   terraform-deploy:
-    name: Terraform Deploy AzDemo
+    name: Terraform Deploy Foundation
     runs-on: ubuntu-latest
 
     env:
@@ -36,35 +35,31 @@ jobs:
           terraform_version: 1.7.0
 
       - name: Terraform Init
-        working-directory: iac/azdemo
+        working-directory: iac/foundation
         run: terraform init
 
       - name: Terraform Format Check
-        working-directory: iac/azdemo
+        working-directory: iac/foundation
         run: terraform fmt -check
 
       - name: Terraform Validate
-        working-directory: iac/azdemo
+        working-directory: iac/foundation
         run: terraform validate
 
       - name: Terraform Plan
-        working-directory: iac/azdemo
+        working-directory: iac/foundation
         run: |
           terraform plan \
-            -var="resource_group_name=rg-azdemo-test" \
+            -var="resource_group_name=rg-altint-foundation" \
             -var="location=canadacentral" \
-            -var="environment=test" \
-            -var="storage_account_name=stazdemo001ca" \
-            -var="vm_admin_username=${{ secrets.VM_ADMIN_USERNAME }}" \
-            -var="vm_admin_password=${{ secrets.VM_ADMIN_PASSWORD }}"
+            -var="environment=production" \
+            -var="storage_account_name=staltintfnd001ca"
 
       - name: Terraform Apply
-        working-directory: iac/azdemo
+        working-directory: iac/foundation
         run: |
           terraform apply -auto-approve \
-            -var="resource_group_name=rg-azdemo-test" \
+            -var="resource_group_name=rg-altint-foundation" \
             -var="location=canadacentral" \
-            -var="environment=test" \
-            -var="storage_account_name=stazdemo001ca" \
-            -var="vm_admin_username=${{ secrets.VM_ADMIN_USERNAME }}" \
-            -var="vm_admin_password=${{ secrets.VM_ADMIN_PASSWORD }}"
+            -var="environment=production" \
+            -var="storage_account_name=staltintfnd001ca"
