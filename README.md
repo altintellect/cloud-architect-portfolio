@@ -5,8 +5,11 @@
 
 ## CI/CD Pipeline Status
 
-![Infrastructure Validation](https://github.com/altintellect/cloud-architect-portfolio/actions/workflows/infrastructure-validation.yml/badge.svg)
+## CI/CD Pipeline Status
+
+![Infrastructure CI](https://github.com/altintellect/cloud-architect-portfolio/actions/workflows/infrastructure-ci.yml/badge.svg)
 ![AzDemo Deploy](https://github.com/altintellect/cloud-architect-portfolio/actions/workflows/azdemo-deploy.yml/badge.svg)
+![AzLearn Deploy](https://github.com/altintellect/cloud-architect-portfolio/actions/workflows/azlearn-test-deploy.yml/badge.svg)
 
 ---
 
