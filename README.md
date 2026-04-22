@@ -65,6 +65,7 @@ A fully automated Azure environment deployed through Terraform and GitHub Action
 | Subnet | snet-azdemo-001 | 10.1.1.0/24 |
 | Network Security Group | nsg-azdemo-001 | SSH restricted to known IPs |
 | Virtual Machine | vm-azdemo-001 | Ubuntu 22.04 LTS |
+| Web Server | Nginx | Deployed via cloud-init |
 | Storage Account | stazdemo001ca | Terraform remote state backend |
 | Public IP | pip-azdemo-001 | Static Standard SKU |
 
