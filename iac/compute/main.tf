@@ -102,6 +102,18 @@ resource "azurerm_network_security_group" "compute" {
     destination_address_prefix = "*"
   }
 
+  security_rule {
+    name                       = "allow-http"
+    priority                   = 110
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
   tags = {
     environment = var.environment
     managed_by  = "terraform"
@@ -156,6 +168,7 @@ resource "azurerm_network_interface" "compute" {
 # ============================================
 # VIRTUAL MACHINE
 # Ubuntu 22.04 LTS - Standard_B2als_v2
+# Nginx installed via cloud-init script
 # ============================================
 resource "azurerm_linux_virtual_machine" "compute" {
   name                = "vm-altint-001"
@@ -166,6 +179,7 @@ resource "azurerm_linux_virtual_machine" "compute" {
   admin_password      = var.vm_admin_password
 
   disable_password_authentication = false
+  custom_data                     = filebase64("${path.module}/scripts/nginx-init.sh")
 
   network_interface_ids = [
     azurerm_network_interface.compute.id
